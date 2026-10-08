@@ -53,6 +53,8 @@ namespace CatAndMouseGame
     public class Game
     {
         public static string InputFile = "ChaseData.txt";
+        public static string OutFile = "PursuitLog.txt";
+
         public int size;
         public Player cat;
         public Player mouse;
@@ -75,20 +77,64 @@ namespace CatAndMouseGame
 
             int.TryParse(lines[0].Trim(), out size);
 
-            for (int i = 1; i < lines.Length; i++)
+            using (StreamWriter writer = new StreamWriter(OutFile))
             {
-                string line = lines[i].Trim();
-                if (string.IsNullOrEmpty(line)) continue;
+                writer.WriteLine("Cat and Mouse");
+                writer.WriteLine();
+                writer.WriteLine("Cat Mouse  Distance");
+                writer.WriteLine("-------------------");
 
-                string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                char command = parts[0][0];
+                for (int i = 1; i < lines.Length; i++)
+                {
+                    if (state == GameState.End) break;
 
-                if (command == 'M')
-                    mouse.Move(int.Parse(parts[1]), size);
-                else if (command == 'C')
-                    cat.Move(int.Parse(parts[1]), size);
-                else if (command == 'P')
-                    Console.WriteLine($"[P] Cat: {cat.location}, Mouse: {mouse.location}");
+                    string line = lines[i].Trim();
+                    if (string.IsNullOrEmpty(line)) continue;
+
+                    string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                    char command = parts[0][0];
+
+                    if (command == 'P')
+                    {
+                        DoPrintCommand(writer);
+                    }
+                    else if (command == 'M' || command == 'C')
+                    {
+                        int steps = int.Parse(parts[1]);
+                        if (command == 'M') mouse.Move(steps, size);
+                        else cat.Move(steps, size);
+
+                        if (cat.state == State.Playing && mouse.state == State.Playing && cat.location == mouse.location)
+                        {
+                            cat.state = State.Winner;
+                            mouse.state = State.Loser;
+                            state = GameState.End;
+                            break;
+                        }
+                    }
+                }
+
+                writer.WriteLine("-------------------");
+                writer.WriteLine();
+                writer.WriteLine();
+                writer.WriteLine("Distance traveled:   Mouse    Cat");
+                writer.WriteLine($"{mouse.distanceTraveled,26}{cat.distanceTraveled,7}");
+            }
+        }
+
+        private void DoPrintCommand(StreamWriter writer)
+        {
+            string catStr = cat.state == State.NotInGame ? "??" : cat.location.ToString();
+            string mouseStr = mouse.state == State.NotInGame ? "??" : mouse.location.ToString();
+
+            if (cat.state != State.NotInGame && mouse.state != State.NotInGame)
+            {
+                int dist = Math.Abs(cat.location - mouse.location);
+                writer.WriteLine($"{catStr,3}{mouseStr,6}{dist,10}");
+            }
+            else
+            {
+                writer.WriteLine($"{catStr,3}{mouseStr,6}");
             }
         }
     }
