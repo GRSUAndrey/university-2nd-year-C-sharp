@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace CatAndMouseGame
 {
@@ -8,6 +9,12 @@ namespace CatAndMouseGame
         Loser,
         Playing,
         NotInGame
+    }
+
+    public enum GameState
+    {
+        Start,
+        End
     }
 
     public class Player
@@ -43,14 +50,55 @@ namespace CatAndMouseGame
         }
     }
 
+    public class Game
+    {
+        public static string InputFile = "ChaseData.txt";
+        public int size;
+        public Player cat;
+        public Player mouse;
+        public GameState state;
+
+        public Game(int size)
+        {
+            this.size = size;
+            cat = new Player("Cat");
+            mouse = new Player("Mouse");
+            state = GameState.Start;
+        }
+
+        public void Run()
+        {
+            if (!File.Exists(InputFile)) return;
+
+            string[] lines = File.ReadAllLines(InputFile);
+            if (lines.Length == 0) return;
+
+            int.TryParse(lines[0].Trim(), out size);
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                char command = parts[0][0];
+
+                if (command == 'M')
+                    mouse.Move(int.Parse(parts[1]), size);
+                else if (command == 'C')
+                    cat.Move(int.Parse(parts[1]), size);
+                else if (command == 'P')
+                    Console.WriteLine($"[P] Cat: {cat.location}, Mouse: {mouse.location}");
+            }
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
-            Player p = new Player("Cat");
-            p.Move(17, 26);
-            p.Move(-15, 26);
-            Console.WriteLine($"Position: {p.location}, Traveled: {p.distanceTraveled}");
+            Game game = new Game(26);
+            game.Run();
         }
     }
 }
