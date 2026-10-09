@@ -70,12 +70,20 @@ namespace CatAndMouseGame
 
         public void Run()
         {
-            if (!File.Exists(InputFile)) return;
+            if (!File.Exists(InputFile))
+            {
+                Console.WriteLine($"Файл {InputFile} не найден.");
+                return;
+            }
 
             string[] lines = File.ReadAllLines(InputFile);
             if (lines.Length == 0) return;
 
-            int.TryParse(lines[0].Trim(), out size);
+            int firstLineSize;
+            if (int.TryParse(lines[0].Trim(), out firstLineSize))
+            {
+                this.size = firstLineSize;
+            }
 
             using (StreamWriter writer = new StreamWriter(OutFile))
             {
@@ -101,8 +109,7 @@ namespace CatAndMouseGame
                     else if (command == 'M' || command == 'C')
                     {
                         int steps = int.Parse(parts[1]);
-                        if (command == 'M') mouse.Move(steps, size);
-                        else cat.Move(steps, size);
+                        DoMoveCommand(command, steps);
 
                         if (cat.state == State.Playing && mouse.state == State.Playing && cat.location == mouse.location)
                         {
@@ -114,11 +121,49 @@ namespace CatAndMouseGame
                     }
                 }
 
+                if (state != GameState.End)
+                {
+                    state = GameState.End;
+                    if (cat.state == State.Playing && mouse.state == State.Playing && cat.location == mouse.location)
+                    {
+                        cat.state = State.Winner;
+                        mouse.state = State.Loser;
+                    }
+                    else
+                    {
+                        mouse.state = State.Winner;
+                        cat.state = State.Loser;
+                    }
+                }
+
                 writer.WriteLine("-------------------");
                 writer.WriteLine();
                 writer.WriteLine();
                 writer.WriteLine("Distance traveled:   Mouse    Cat");
                 writer.WriteLine($"{mouse.distanceTraveled,26}{cat.distanceTraveled,7}");
+                writer.WriteLine();
+
+                if (cat.location == mouse.location && cat.state != State.NotInGame && mouse.state != State.NotInGame)
+                {
+                    writer.WriteLine($"Mouse caught at: {mouse.location,2}");
+                }
+                else
+                {
+                    writer.WriteLine("Mouse evaded Cat");
+                }
+            }
+        }
+
+        private void DoMoveCommand(char command, int steps)
+        {
+            switch (command)
+            {
+                case 'M':
+                    mouse.Move(steps, size);
+                    break;
+                case 'C':
+                    cat.Move(steps, size);
+                    break;
             }
         }
 
@@ -129,7 +174,7 @@ namespace CatAndMouseGame
 
             if (cat.state != State.NotInGame && mouse.state != State.NotInGame)
             {
-                int dist = Math.Abs(cat.location - mouse.location);
+                int dist = GetDistance();
                 writer.WriteLine($"{catStr,3}{mouseStr,6}{dist,10}");
             }
             else
@@ -137,14 +182,32 @@ namespace CatAndMouseGame
                 writer.WriteLine($"{catStr,3}{mouseStr,6}");
             }
         }
+
+        private int GetDistance()
+        {
+            return Math.Abs(cat.location - mouse.location);
+        }
     }
 
     class Program
     {
         static void Main(string[] args)
         {
-            Game game = new Game(26);
-            game.Run();
+            string[] testInputs = { "1.ChaseData.txt", "2.ChaseData.txt", "3.ChaseData.txt" };
+            string[] testOutputs = { "1.PursuitLog.txt", "2.PursuitLog.txt", "3.PursuitLog.txt" };
+
+            for (int i = 0; i < testInputs.Length; i++)
+            {
+                if (File.Exists(testInputs[i]))
+                {
+                    Game.InputFile = testInputs[i];
+                    Game.OutFile = testOutputs[i];
+
+                    Game game = new Game(100);
+                    game.Run();
+                    Console.WriteLine($"[УСПЕХ] Обработан тестовый файл {testInputs[i]} -> {testOutputs[i]}");
+                }
+            }
         }
     }
 }
