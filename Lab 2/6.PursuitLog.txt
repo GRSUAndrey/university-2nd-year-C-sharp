@@ -1,0 +1,11 @@
+Cat and Mouse
+
+Cat Mouse  Distance
+-------------------
+-------------------
+
+
+Distance traveled:   Mouse    Cat
+                         0      0
+
+Mouse caught at:  4
