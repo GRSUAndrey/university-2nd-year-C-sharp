@@ -41,13 +41,12 @@ namespace CatAndMouse.Tests
         }
 
         [TestMethod]
-        public void Constructor_StartsGameAndCreatesPlayersNotInGame()
+        public void Constructor_CreatesPlayersNotInGame()
         {
             // Arrange / Act
             Game game = new Game(20);
 
-            // Assert
-            Assert.AreEqual(GameState.Start, game.state);
+            // Assert: no GameState is used; player statuses describe the initial state.
             Assert.AreEqual(State.NotInGame, game.cat.state);
             Assert.AreEqual(State.NotInGame, game.mouse.state);
             Assert.AreEqual("Cat", game.cat.name);
@@ -88,7 +87,6 @@ namespace CatAndMouse.Tests
             );
 
             // Assert
-            Assert.AreEqual(GameState.End, game.state);
             Assert.AreEqual(State.Winner, game.cat.state);
             Assert.AreEqual(State.Loser, game.mouse.state);
             Assert.AreEqual(5, game.cat.location);
@@ -107,7 +105,6 @@ namespace CatAndMouse.Tests
             );
 
             // Assert
-            Assert.AreEqual(GameState.End, game.state);
             Assert.AreEqual(State.Winner, game.mouse.state);
             Assert.AreEqual(State.Loser, game.cat.state);
             Assert.AreEqual(19, game.mouse.location);

@@ -1,4 +1,5 @@
- using System;
+
+using System;
 using System.IO;
 
 namespace CatAndMouseGame
@@ -11,14 +12,12 @@ namespace CatAndMouseGame
         public int size;
         public Player cat;
         public Player mouse;
-        public GameState state;
 
         public Game(int size)
         {
             this.size = size;
             cat = new Player("Cat");
             mouse = new Player("Mouse");
-            state = GameState.Start;
         }
 
         public void Run()
@@ -51,9 +50,6 @@ namespace CatAndMouseGame
 
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    if (state == GameState.End)
-                        break;
-
                     string line = lines[i].Trim();
 
                     if (string.IsNullOrEmpty(line))
@@ -82,28 +78,18 @@ namespace CatAndMouseGame
                         {
                             cat.state = State.Winner;
                             mouse.state = State.Loser;
-                            state = GameState.End;
+
                             break;
                         }
                     }
                 }
 
-                if (state != GameState.End)
+                // Если кот не поймал мышь,
+                // побеждает мышь.
+                if (cat.state != State.Winner)
                 {
-                    state = GameState.End;
-
-                    if (cat.state == State.Playing &&
-                        mouse.state == State.Playing &&
-                        cat.location == mouse.location)
-                    {
-                        cat.state = State.Winner;
-                        mouse.state = State.Loser;
-                    }
-                    else
-                    {
-                        mouse.state = State.Winner;
-                        cat.state = State.Loser;
-                    }
+                    mouse.state = State.Winner;
+                    cat.state = State.Loser;
                 }
 
                 writer.WriteLine("-------------------");
@@ -118,11 +104,12 @@ namespace CatAndMouseGame
 
                 writer.WriteLine();
 
-                if (cat.location == mouse.location &&
-                    cat.state != State.NotInGame &&
-                    mouse.state != State.NotInGame)
+                if (cat.state == State.Winner &&
+                    mouse.state == State.Loser)
                 {
-                    writer.WriteLine($"Mouse caught at: {mouse.location,2}");
+                    writer.WriteLine(
+                        $"Mouse caught at: {mouse.location,2}"
+                    );
                 }
                 else
                 {
