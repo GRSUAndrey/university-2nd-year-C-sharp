@@ -1,0 +1,1 @@
+﻿What is text? Text consists of words, sentences, and punctuation. This example helps test text processing!
