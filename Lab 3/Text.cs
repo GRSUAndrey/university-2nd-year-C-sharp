@@ -107,6 +107,49 @@ public class Text
         return removed;
     }
 
+
+    /// <summary>
+    /// Builds an alphabetical concordance for the original text.
+    /// Frequency counts every occurrence; line numbers are unique and ordered.
+    /// </summary>
+    public IReadOnlyList<ConcordanceEntry> BuildConcordance()
+    {
+        var entriesByWord = new Dictionary<string, ConcordanceEntry>(
+            StringComparer.OrdinalIgnoreCase);
+        var sortedWords = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Reconstruct the original text so line numbers refer to source lines,
+        // not to sentence numbers stored by the parser.
+        using var reader = new StringReader(ToString());
+        string? line;
+        int lineNumber = 0;
+
+        while ((line = reader.ReadLine()) is not null)
+        {
+            lineNumber++;
+
+            Text parsedLine = TextParser.Parse(line);
+            foreach (Word word in parsedLine.Sentences
+                         .SelectMany(sentence => sentence.Tokens.OfType<Word>()))
+            {
+                string normalizedWord = word.Text.ToLowerInvariant();
+
+                if (!entriesByWord.TryGetValue(normalizedWord, out ConcordanceEntry? entry))
+                {
+                    entry = new ConcordanceEntry(normalizedWord);
+                    entriesByWord.Add(normalizedWord, entry);
+                    sortedWords.Add(normalizedWord);
+                }
+
+                entry.AddOccurrence(lineNumber);
+            }
+        }
+
+        return sortedWords
+            .Select(word => entriesByWord[word])
+            .ToList();
+    }
+
     private static bool StartsWithConsonant(string word)
     {
         char firstLetter = word.FirstOrDefault(char.IsLetter);

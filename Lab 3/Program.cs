@@ -34,6 +34,7 @@ internal static class Program
                 case "8": ReplaceWordsInSentence(); break;
                 case "9": RemoveStopWords(); break;
                 case "10": ExportToXml(); break;
+                case "11": PrintConcordance(); break;
                 case "0": exit = true; break;
                 default: Console.WriteLine("Неизвестный пункт меню."); break;
             }
@@ -49,7 +50,7 @@ internal static class Program
     private static void PrintMenu()
     {
         Console.Clear();
-        Console.WriteLine("Лабораторная работа №3 — обработка текста");
+        Console.WriteLine("Лабораторная работа №4 — обработка текста");
         Console.WriteLine($"Предложений в тексте: {_text.Sentences.Count}");
         Console.WriteLine("1. Загрузить текст из файла");
         Console.WriteLine("2. Ввести текст вручную");
@@ -61,6 +62,7 @@ internal static class Program
         Console.WriteLine("8. Заменить слова заданной длины в указанном предложении");
         Console.WriteLine("9. Удалить стоп-слова (русские и английские)");
         Console.WriteLine("10. Экспортировать объект Text в XML");
+        Console.WriteLine("11. Построить конкорданс (частотный словарь)");
         Console.WriteLine("0. Выход");
         Console.WriteLine();
     }
@@ -181,6 +183,27 @@ internal static class Program
         int removed = _text.RemoveStopWords(stopWords);
         Console.WriteLine($"Загружено стоп-слов: {stopWords.Count}. Удалено слов из текста: {removed}.");
         PrintCurrentText();
+    }
+
+
+    private static void PrintConcordance()
+    {
+        IReadOnlyList<ConcordanceEntry> concordance = _text.BuildConcordance();
+
+        if (concordance.Count == 0)
+        {
+            Console.WriteLine("В тексте не найдено слов для конкорданса.");
+            return;
+        }
+
+        int wordWidth = concordance.Max(entry => entry.Word.Length);
+
+        Console.WriteLine("Конкорданс (слово — количество вхождений: номера строк):");
+        foreach (ConcordanceEntry entry in concordance)
+        {
+            string lineNumbers = string.Join(" ", entry.LineNumbers);
+            Console.WriteLine($"{entry.Word.PadRight(wordWidth)} {entry.Frequency}: {lineNumbers}");
+        }
     }
 
     private static void ExportToXml()
